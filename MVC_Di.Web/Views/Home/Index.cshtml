@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "記帳小工具";
+}
+
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-4">
+        <h1 class="display-5 fw-bold">MVC 記帳小工具</h1>
+        <p class="col-md-8 fs-5">
+            這個範例刻意保持簡單，方便教學時示範 MVC、EF Core、DI、Cookie Login、Middleware 與 NLog 的整合方式。
+        </p>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">前往登入</a>
+            <a class="btn btn-outline-secondary btn-lg" asp-controller="Ledger" asp-action="Index">查看記帳頁</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h4">教學重點</h2>
+                <ul class="mb-0">
+                    <li>EF Core 透過 `AccountingDbContext` 讀寫 SQL Server。</li>
+                    <li>DI 透過 `IAuthService`、`IRecordService` 注入控制器。</li>
+                    <li>Middleware 透過 `RequestTimingMiddleware` 記錄請求耗時。</li>
+                    <li>NLog 同時輸出到 Console 與 `logs/` 檔案。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h2 class="h4">示範帳號</h2>
+                <p class="mb-2">系統啟動時會自動建立一筆示範使用者與兩筆支出資料。</p>
+                <div><strong>帳號：</strong>demo</div>
+                <div><strong>密碼：</strong>demo123</div>
+            </div>
+        </div>
+    </div>
+</div>

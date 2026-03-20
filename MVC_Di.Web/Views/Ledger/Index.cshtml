@@ -1,0 +1,88 @@
+@model LedgerIndexViewModel
+@{
+    ViewData["Title"] = "我的記帳";
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h3">新增支出</h1>
+                <p class="text-muted">目前登入者：@Model.DisplayName</p>
+                <div class="alert alert-light border">
+                    <div><strong>累計支出：</strong> @Model.TotalAmount.ToString("C0")</div>
+                    <div><strong>筆數：</strong> @Model.Records.Count</div>
+                </div>
+
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-3">
+                        <label asp-for="NewRecord.Category" class="form-label"></label>
+                        <input asp-for="NewRecord.Category" class="form-control"/>
+                        <span asp-validation-for="NewRecord.Category" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewRecord.Description" class="form-label"></label>
+                        <input asp-for="NewRecord.Description" class="form-control"/>
+                        <span asp-validation-for="NewRecord.Description" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewRecord.Amount" class="form-label"></label>
+                        <input asp-for="NewRecord.Amount" class="form-control"/>
+                        <span asp-validation-for="NewRecord.Amount" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewRecord.SpendDate" class="form-label"></label>
+                        <input asp-for="NewRecord.SpendDate" class="form-control"/>
+                        <span asp-validation-for="NewRecord.SpendDate" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">新增記錄</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h4 mb-3">支出清單</h2>
+
+                @if (Model.Records.Count == 0)
+                {
+                    <div class="alert alert-secondary mb-0">目前還沒有支出資料。</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>分類</th>
+                                <th>用途</th>
+                                <th class="text-end">金額</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var record in Model.Records)
+                            {
+                                <tr>
+                                    <td>@record.SpendDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@record.Category</td>
+                                    <td>@record.Description</td>
+                                    <td class="text-end">@record.Amount.ToString("C0")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial"/>
+}
