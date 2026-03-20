@@ -6,7 +6,7 @@ namespace MVC_Di.Services;
 
 public class RecordService(AccountingDbContext dbContext, ILogger<RecordService> logger) : IRecordService
 {
-    public async Task<List<AccountRecord>> GetRecordsAsync(int userId)
+    public virtual async Task<List<AccountRecord>> GetRecordsAsync(int userId)
     {
         return await dbContext.AccountRecords
             .Where(record => record.AppUserId == userId)
@@ -15,7 +15,8 @@ public class RecordService(AccountingDbContext dbContext, ILogger<RecordService>
             .ToListAsync();
     }
 
-    public async Task AddRecordAsync(int userId, CreateRecordViewModel input)
+
+    public virtual async Task AddRecordAsync(int userId, CreateRecordViewModel input)
     {
         var record = new AccountRecord
         {

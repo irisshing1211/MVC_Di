@@ -4,7 +4,7 @@ namespace MVC_Di.Models;
 
 public class CreateRecordViewModel
 {
-    [Required(ErrorMessage = "請輸入分類")]
+    [Required(ErrorMessage = "請選擇分類")]
     [Display(Name = "分類")]
     public string Category { get; set; } = string.Empty;
 

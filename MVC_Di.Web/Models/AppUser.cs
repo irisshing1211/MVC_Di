@@ -16,4 +16,5 @@ public class AppUser
     public string DisplayName { get; set; } = string.Empty;
 
     public List<AccountRecord> AccountRecords { get; set; } = [];
+    public List<UserCategory> Categories { get; set; } = [];
 }

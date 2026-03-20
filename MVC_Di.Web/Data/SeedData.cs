@@ -24,6 +24,20 @@ public static class SeedData
         dbContext.AppUsers.Add(demoUser);
         await dbContext.SaveChangesAsync();
 
+        dbContext.UserCategories.AddRange(
+            new UserCategory
+            {
+                Name = "早餐",
+                AppUserId = demoUser.Id
+            },
+            new UserCategory
+            {
+                Name = "交通",
+                AppUserId = demoUser.Id
+            });
+
+        await dbContext.SaveChangesAsync();
+
         dbContext.AccountRecords.AddRange(
             new AccountRecord
             {

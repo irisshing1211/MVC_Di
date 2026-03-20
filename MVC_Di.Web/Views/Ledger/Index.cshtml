@@ -7,6 +7,37 @@
     <div class="col-lg-4">
         <div class="card shadow-sm">
             <div class="card-body">
+                <h2 class="h4">我的分類</h2>
+                <p class="text-muted">分類為個人專屬，只會出現在你自己的下拉選單。</p>
+
+                <form asp-action="AddCategory" method="post" class="mb-4">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-3">
+                        <label asp-for="NewCategory.Name" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="NewCategory.Name" class="form-control" />
+                            <button type="submit" class="btn btn-outline-secondary">新增</button>
+                        </div>
+                        <span asp-validation-for="NewCategory.Name" class="text-danger"></span>
+                    </div>
+                </form>
+
+                @if (Model.Categories.Count == 0)
+                {
+                    <div class="alert alert-warning">請先建立至少一個分類。</div>
+                }
+                else
+                {
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        @foreach (var category in Model.Categories)
+                        {
+                            <span class="badge rounded-pill text-bg-light border">@category</span>
+                        }
+                    </div>
+                }
+
+                <hr />
+
                 <h1 class="h3">新增支出</h1>
                 <p class="text-muted">目前登入者：@Model.DisplayName</p>
                 <div class="alert alert-light border">
@@ -18,7 +49,13 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="mb-3">
                         <label asp-for="NewRecord.Category" class="form-label"></label>
-                        <input asp-for="NewRecord.Category" class="form-control"/>
+                        <select asp-for="NewRecord.Category" class="form-select">
+                            <option value="">請選擇分類</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
                         <span asp-validation-for="NewRecord.Category" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
