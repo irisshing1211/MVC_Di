@@ -20,4 +20,34 @@ public class AuthService(AccountingDbContext dbContext, ILogger<AuthService> log
         logger.LogInformation("Login succeeded for username {Username}", username);
         return user;
     }
+
+    public async Task<bool> UsernameExistsAsync(string username)
+    {
+        var normalizedUsername = username.Trim();
+        return await dbContext.AppUsers.AnyAsync(item => item.Username == normalizedUsername);
+    }
+
+    public async Task<AppUser?> RegisterUserAsync(RegisterViewModel input)
+    {
+        var user = new AppUser
+        {
+            Username = input.Username.Trim(),
+            Password = input.Password,
+            DisplayName = input.DisplayName.Trim()
+        };
+
+        dbContext.AppUsers.Add(user);
+
+        try
+        {
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("User {Username} registered", user.Username);
+            return user;
+        }
+        catch (DbUpdateException exception)
+        {
+            logger.LogWarning(exception, "Registration failed for username {Username}", user.Username);
+            return null;
+        }
+    }
 }

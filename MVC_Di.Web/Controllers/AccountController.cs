@@ -20,6 +20,17 @@ public class AccountController(IAuthService authService, ILogger<AccountControll
         return View(new LoginViewModel());
     }
 
+    [HttpGet]
+    public IActionResult Register()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Ledger");
+        }
+
+        return View(new RegisterViewModel());
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel input)
@@ -36,18 +47,36 @@ public class AccountController(IAuthService authService, ILogger<AccountControll
             return View(input);
         }
 
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.Username),
-            new("DisplayName", user.DisplayName)
-        };
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        await SignInUserAsync(user);
         logger.LogInformation("User {Username} signed in", user.Username);
+
+        return RedirectToAction("Index", "Ledger");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterViewModel input)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(input);
+        }
+
+        if (await authService.UsernameExistsAsync(input.Username))
+        {
+            input.ErrorMessage = "帳號已被使用";
+            return View(input);
+        }
+
+        var user = await authService.RegisterUserAsync(input);
+        if (user is null)
+        {
+            input.ErrorMessage = "註冊失敗，請稍後再試";
+            return View(input);
+        }
+
+        await SignInUserAsync(user);
+        logger.LogInformation("User {Username} signed in after registration", user.Username);
 
         return RedirectToAction("Index", "Ledger");
     }
@@ -59,5 +88,20 @@ public class AccountController(IAuthService authService, ILogger<AccountControll
         logger.LogInformation("User {Username} signed out", User.Identity?.Name);
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Login");
+    }
+
+    private async Task SignInUserAsync(AppUser user)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username),
+            new("DisplayName", user.DisplayName)
+        };
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
     }
 }
