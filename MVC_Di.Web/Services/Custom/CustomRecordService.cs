@@ -10,7 +10,7 @@ public class CustomRecordService(AccountingDbContext dbContext, ILogger<CustomRe
     {
         return await dbContext.AccountRecords.Where(record => record.AppUserId == userId)
                               .OrderByDescending(record => record.SpendDate)
-                              .ThenByDescending(record => record.Category)
+                              .ThenByDescending(record => record.Amount)
                               .ToListAsync();
     }
 }

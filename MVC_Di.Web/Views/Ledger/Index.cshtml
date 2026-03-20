@@ -10,12 +10,13 @@
                 <h2 class="h4">我的分類</h2>
                 <p class="text-muted">分類為個人專屬，只會出現在你自己的下拉選單。</p>
 
-                <form asp-action="AddCategory" method="post" class="mb-4">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <form asp-action="AddCategory" method="post" class="mb-4" id="add-category-form">
+                    @Html.AntiForgeryToken()
+                    <div class="text-danger mb-3 d-none" id="add-category-error"></div>
                     <div class="mb-3">
                         <label asp-for="NewCategory.Name" class="form-label"></label>
                         <div class="input-group">
-                            <input asp-for="NewCategory.Name" class="form-control" />
+                            <input asp-for="NewCategory.Name" class="form-control" id="new-category-name" />
                             <button type="submit" class="btn btn-outline-secondary">新增</button>
                         </div>
                         <span asp-validation-for="NewCategory.Name" class="text-danger"></span>
@@ -24,16 +25,21 @@
 
                 @if (Model.Categories.Count == 0)
                 {
-                    <div class="alert alert-warning">請先建立至少一個分類。</div>
+                    <div class="alert alert-warning" id="category-empty-state">請先建立至少一個分類。</div>
                 }
                 else
                 {
-                    <div class="d-flex flex-wrap gap-2 mb-4">
+                    <div class="d-flex flex-wrap gap-2 mb-4" id="category-list">
                         @foreach (var category in Model.Categories)
                         {
-                            <span class="badge rounded-pill text-bg-light border">@category</span>
+                            <span class="badge rounded-pill border text-dark bg-light">@category</span>
                         }
                     </div>
+                }
+
+                @if (Model.Categories.Count == 0)
+                {
+                    <div class="d-flex flex-wrap gap-2 mb-4 d-none" id="category-list"></div>
                 }
 
                 <hr />
@@ -49,7 +55,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="mb-3">
                         <label asp-for="NewRecord.Category" class="form-label"></label>
-                        <select asp-for="NewRecord.Category" class="form-select">
+                        <select asp-for="NewRecord.Category" class="form-select" id="record-category-select">
                             <option value="">請選擇分類</option>
                             @foreach (var category in Model.Categories)
                             {
@@ -122,4 +128,100 @@
 @section Scripts
 {
     <partial name="_ValidationScriptsPartial"/>
+    <script>
+        const addCategoryForm = document.getElementById("add-category-form");
+        const newCategoryNameInput = document.getElementById("new-category-name");
+        const addCategoryError = document.getElementById("add-category-error");
+        const categoryList = document.getElementById("category-list");
+        const categoryEmptyState = document.getElementById("category-empty-state");
+        const recordCategorySelect = document.getElementById("record-category-select");
+
+        newCategoryNameInput?.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                addCategoryForm?.requestSubmit();
+            }
+        });
+
+        function renderCategories(categories) {
+            if (!categoryList) {
+                return;
+            }
+
+            categoryList.classList.remove("d-none");
+            categoryList.replaceChildren();
+
+            categories.forEach(function (category) {
+                const badge = document.createElement("span");
+                badge.className = "badge rounded-pill border text-dark bg-light";
+                badge.textContent = String(category ?? "").trim();
+                categoryList.appendChild(badge);
+            });
+        }
+
+        function renderCategoryOptions(categories, selectedCategory) {
+            if (!recordCategorySelect) {
+                return;
+            }
+
+            recordCategorySelect.replaceChildren();
+
+            const defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "請選擇分類";
+            recordCategorySelect.appendChild(defaultOption);
+
+            categories.forEach(function (category) {
+                const option = document.createElement("option");
+                option.value = String(category ?? "").trim();
+                option.textContent = String(category ?? "").trim();
+                recordCategorySelect.appendChild(option);
+            });
+
+            recordCategorySelect.value = selectedCategory;
+        }
+
+        addCategoryForm?.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            addCategoryError?.classList.add("d-none");
+            if (addCategoryError) {
+                addCategoryError.textContent = "";
+            }
+
+            const formData = new FormData(addCategoryForm);
+
+            const response = await fetch(addCategoryForm.action, {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                if (addCategoryError) {
+                    addCategoryError.textContent = result.errorMessage ?? "新增分類失敗";
+                    addCategoryError.classList.remove("d-none");
+                }
+                return;
+            }
+
+            const categories = Array.isArray(result.categories) ? result.categories : [];
+            const selectedCategory = String(result.categoryName ?? "").trim();
+
+            renderCategories(categories);
+
+            if (categoryEmptyState) {
+                categoryEmptyState.classList.add("d-none");
+            }
+
+            renderCategoryOptions(categories, selectedCategory);
+
+            addCategoryForm.reset();
+            newCategoryNameInput?.focus();
+        });
+    </script>
 }

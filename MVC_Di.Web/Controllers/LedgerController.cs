@@ -18,7 +18,7 @@ public class LedgerController(IRecordService recordService, ICategoryService cat
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreateRecordViewModel input)
+    public async Task<IActionResult> Create([Bind(Prefix = "NewRecord")] CreateRecordViewModel input)
     {
         var userId = GetUserId();
         var categoryExists = await categoryService.CategoryExistsAsync(userId, input.Category);
@@ -39,20 +39,46 @@ public class LedgerController(IRecordService recordService, ICategoryService cat
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddCategory(AddCategoryViewModel input)
+    public async Task<IActionResult> AddCategory([Bind(Prefix = "NewCategory")] AddCategoryViewModel input)
     {
         var userId = GetUserId();
 
         if (!ModelState.IsValid)
         {
+            if (IsAjaxRequest())
+            {
+                return BadRequest(new
+                {
+                    errorMessage = GetFirstModelError() ?? "分類名稱格式不正確"
+                });
+            }
+
             return View("Index", await BuildIndexViewModelAsync(userId, newCategory: input));
         }
 
         var created = await categoryService.AddCategoryAsync(userId, input);
         if (!created)
         {
+            if (IsAjaxRequest())
+            {
+                return Conflict(new
+                {
+                    errorMessage = "分類名稱已存在"
+                });
+            }
+
             ModelState.AddModelError("NewCategory.Name", "分類名稱已存在");
             return View("Index", await BuildIndexViewModelAsync(userId, newCategory: input));
+        }
+
+        if (IsAjaxRequest())
+        {
+            var categories = await categoryService.GetCategoriesAsync(userId);
+            return Ok(new
+            {
+                categoryName = input.Name.Trim(),
+                categories
+            });
         }
 
         return RedirectToAction(nameof(Index));
@@ -61,6 +87,19 @@ public class LedgerController(IRecordService recordService, ICategoryService cat
     private int GetUserId()
     {
         return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
+
+    private bool IsAjaxRequest()
+    {
+        return Request.Headers.XRequestedWith == "XMLHttpRequest";
+    }
+
+    private string? GetFirstModelError()
+    {
+        return ModelState.Values
+            .SelectMany(value => value.Errors)
+            .Select(error => error.ErrorMessage)
+            .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
     }
 
     private async Task<LedgerIndexViewModel> BuildIndexViewModelAsync(
